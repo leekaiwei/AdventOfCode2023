@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-var input = await File.ReadAllTextAsync("H:\\Repositories\\AdventOfCode2023\\AdventOfCode2023\\input.txt");
+var input = await File.ReadAllTextAsync($"{AppDomain.CurrentDomain.BaseDirectory}\\input.txt");
 
 var stopWatch = new Stopwatch();
 stopWatch.Start();
@@ -41,7 +41,7 @@ stopWatch.Stop();
 
 Console.WriteLine();
 Console.WriteLine($"Sum: {sum}");
-Console.WriteLine($"Time: {stopWatch.ElapsedMilliseconds}ms");
+Console.WriteLine($"Time: {stopWatch.ElapsedMilliseconds}ms"); //13ms without logging
 
 string NumberValue(string input)
 {

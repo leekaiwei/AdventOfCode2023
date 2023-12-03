@@ -31,7 +31,7 @@ int Part1(string input)
     var sum = 0;
     var skip = false;
 
-    var matches = Regex.Matches(input, "(Game (?<game>\\d+):)? (?<set>((?<count>\\d+) (?<colour>([a-z]+))))");
+    var matches = Regex.Matches(input, "(Game (?<game>\\d+):)? (((?<count>\\d+) (?<colour>([a-z]+))))");
     foreach (Match match in matches)
     {
         if (match.Groups["game"].Success)

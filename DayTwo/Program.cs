@@ -81,7 +81,6 @@ int Part2(string input)
                 { "blue", 0 },
             };
         }
-
        
         var count = int.Parse(match.Groups["count"].Value);
         var colour = match.Groups["colour"].Value;

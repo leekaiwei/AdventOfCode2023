@@ -1,20 +1,20 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-var lines = await File.ReadAllLinesAsync($"{AppDomain.CurrentDomain.BaseDirectory}\\input.txt");
+var input = await File.ReadAllTextAsync($"{AppDomain.CurrentDomain.BaseDirectory}\\input.txt");
 
 var stopWatch = new Stopwatch();
 stopWatch.Start();
 
-//var sum = Process(lines, 1);
-var sum = Process(lines, 2);
+//var sum = Process(input, 1);
+var sum = Process(input, 2);
 
 stopWatch.Stop();
 
 Console.WriteLine($"Sum: {sum}");
-Console.WriteLine($"Time: {stopWatch.ElapsedMilliseconds}ms"); //12ms without logging
+Console.WriteLine($"Time: {stopWatch.ElapsedMilliseconds}ms"); //12ms | 14ms
 
-static int Process(string[] lines, int part)
+int Process(string input, int part)
 {
     var rules = new Dictionary<string, int>
     {
@@ -23,61 +23,66 @@ static int Process(string[] lines, int part)
         { "blue", 14 },
     };
 
-    const string numberRegex = "\\d+";
-    const string setRegex = "[^;]+";
-    const string groupRegex = "(?<count>\\d+) (?<colour>[a-z]+)";
-
+    var game = 0;
     var sum = 0;
+    var skip = false;
 
-    var nextLine = false;
-    foreach (var line in lines)
+    var minimumCubes = new Dictionary<string, int>
     {
-        var minimumCubes = new Dictionary<string, int>
+        { "red", 0 },
+        { "green", 0 },
+        { "blue", 0 },
+    };
+
+    var matches = Regex.Matches(input, "(Game (?<game>\\d+):)? (?<set>((?<count>\\d+) (?<colour>([a-z]+))))");
+    foreach (Match match in matches)
+    {
+        if (match.Groups["game"].Success)
         {
-            { "red", 0 },
-            { "green", 0 },
-            { "blue", 0 },
-        };
-
-        nextLine = false;
-
-        var gameSplit = line.Split(':');
-        var numberMatch = Regex.Match(gameSplit[0], numberRegex);
-        var setMatches = Regex.Matches(gameSplit[1], setRegex);
-
-        foreach (Match setMatch in setMatches)
-        {
-            var groups = Regex.Matches(setMatch.Value, groupRegex);
-            foreach (Match groupMatch in groups)
+            if (part == 1)
             {
-                var count = int.Parse(groupMatch.Groups["count"].Value);
-                var colour = groupMatch.Groups["colour"].Value;
-                
-                if (part == 1)
-                {
-                    if (count > rules[colour])
-                    {
-                        nextLine = true; break;
-                    }
-                }
-                else
-                {
-                    minimumCubes[colour] = Math.Max(minimumCubes[colour], count);
-                }
-                
+                if (!skip) sum += game;
+                skip = false;
             }
+            else
+            {
+                sum += minimumCubes.Values.Aggregate((p, n) => p * n);
 
-            if (nextLine) break;
+                minimumCubes = new Dictionary<string, int>
+                {
+                    { "red", 0 },
+                    { "green", 0 },
+                    { "blue", 0 },
+                };
+            }
+            
+            game = int.Parse(match.Groups["game"].Value);
+            
         }
+        
+        if (!skip)
+        {
+            var count = int.Parse(match.Groups["count"].Value);
+            var colour = match.Groups["colour"].Value;
 
-        if (!nextLine && part == 1)
-        {
-            sum += int.Parse(numberMatch.Value);
+            if (part == 1)
+            {
+                if (count > rules[colour]) skip = true;
+            }
+            else
+            {
+                minimumCubes[colour] = Math.Max(minimumCubes[colour], count);
+            }
         }
-        else
-        {
-            sum += minimumCubes.Values.Aggregate((p, n) => p * n);
-        }
+    }
+
+    if (!skip && part == 1)
+    {
+        sum += game;
+    }
+    else
+    {
+        sum += minimumCubes.Values.Aggregate((p, n) => p * n);
     }
 
     return sum;

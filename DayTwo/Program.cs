@@ -30,7 +30,7 @@ int Part1(string input)
     var sum = 0;
     var skip = false;
 
-    var matches = Regex.Matches(input, "(Game (?<game>\\d+):)? (?<count>\\d+) (?<colour>([a-z]+))");
+    var matches = Regex().Matches(input);
     foreach (Match match in matches)
     {
         if (match.Groups["game"].Success)
@@ -66,7 +66,7 @@ int Part2(string input)
         { "blue", 0 },
     };
 
-    var matches = Regex.Matches(input, "(Game (?<game>\\d+):)? (?<count>\\d+) (?<colour>([a-z]+))");
+    var matches = System.Text.RegularExpressions.Regex.Matches(input, "(Game (?<game>\\d+):)? (?<count>\\d+) (?<colour>([a-z]+))");
     foreach (Match match in matches)
     {
         if (match.Groups["game"].Success)
@@ -90,4 +90,10 @@ int Part2(string input)
     sum += minimumCubes.Values.Aggregate((p, n) => p * n);
 
     return sum;
+}
+
+partial class Program
+{
+    [GeneratedRegex("(Game (?<game>\\d+):)? (?<count>\\d+) (?<colour>([a-z]+))")]
+    private static partial Regex Regex();
 }

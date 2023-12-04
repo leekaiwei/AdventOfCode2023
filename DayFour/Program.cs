@@ -12,16 +12,14 @@ var total = PartTwo(input);
 stopWatch.Stop();
 
 Console.WriteLine($"Total: {total}");
-Console.WriteLine($"Time: {stopWatch.ElapsedMilliseconds}ms"); //10ms
+Console.WriteLine($"Time: {stopWatch.ElapsedMilliseconds}ms"); //12ms | 15ms
 
 static double PartOne(string input)
 {
-    var matches = CardRegex().Matches(input);
-
     var cards = new List<Card>();
-
-    Card currentCard = new(0, new List<int>(), new List<int>());
-
+    var currentCard = new Card(0, new List<int>(), new List<int>());
+    
+    var matches = CardRegex().Matches(input);
     foreach (Match match in matches)
     {
         var groups = match.Groups;
@@ -46,6 +44,9 @@ static double PartOne(string input)
         }
     }
 
+    cards.RemoveAt(0);
+    cards.Add(currentCard);
+
     var total = 0d;
     foreach (var card in cards)
     {
@@ -61,12 +62,10 @@ static double PartOne(string input)
 
 static double PartTwo(string input)
 {
-    var matches = CardRegex().Matches(input);
-
     var cards = new List<Card>();
-
-    Card currentCard = new(0, new List<int>(), new List<int>());
-
+    var currentCard = new Card(0, new List<int>(), new List<int>());
+    
+    var matches = CardRegex().Matches(input);
     foreach (Match match in matches)
     {
         var groups = match.Groups;
@@ -103,16 +102,13 @@ static double PartTwo(string input)
     foreach (var card in cards)
     {
         var intersects = card.Winners.Intersect(card.Owned);
-        if (intersects != null && intersects.Any())
+        for (var i = card.Number + 1; i <= card.Number + intersects.Count() && i <= cards.Count; i++)
         {
-            for (var i = card.Number + 1; i <= card.Number + intersects.Count() && i < cards.Count; i++)
-            {
-                cardCopies[i] += cardCopies[card.Number];
-            }
+            cardCopies[i] += cardCopies[card.Number];
         }
     }
 
-    return cardCopies.Sum(cardCopy => cardCopy.Value); //4605396
+    return cardCopies.Sum(cardCopy => cardCopy.Value); 
 }
 
 record Card(int Number, List<int> Winners, List<int> Owned);

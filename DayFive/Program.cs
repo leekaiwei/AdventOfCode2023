@@ -6,27 +6,174 @@ var lines = await File.ReadAllLinesAsync($"{AppDomain.CurrentDomain.BaseDirector
 var stopWatch = new Stopwatch();
 stopWatch.Start();
 
-var mappingDefinitions = new List<MappingDefinition>();
-var mappings = new Dictionary<int, List<int>>();
-var mode = string.Empty;
+//var result = PartOne(lines);
+var result = PartTwo(lines);
 
-foreach (var line in lines)
+stopWatch.Stop();
+
+Console.WriteLine($"Result: {result}");
+Console.WriteLine($"Time: {stopWatch.ElapsedMilliseconds}ms"); //27ms
+
+long PartOne(string[] lines)
 {
-    if (line.StartsWith("seeds:"))
+    var mappingDefinitions = new Dictionary<string, List<MappingDefinition>>();
+    var mappings = new Dictionary<long, List<long>>();
+    var mode = string.Empty;
+
+    foreach (var line in lines)
     {
-        var seeds = NumberRegex().Matches(line);
-        foreach (Match seed in seeds)
+        if (line.StartsWith("seeds:"))
         {
-            mappings.Add(int.Parse(seed.Value), new List<int>());
+            var seeds = NumberRegex().Matches(line);
+            foreach (Match seed in seeds)
+            {
+                mappings.Add(long.Parse(seed.Value), new() { long.Parse(seed.Value) });
+            }
+        }
+        else
+        {
+            var mappingMatch = MapRegex().Match(line);
+
+            if (string.IsNullOrEmpty(line)) continue;
+
+            if (mappingMatch.Success)
+            {
+                mode = mappingMatch.Value;
+                mappingDefinitions.Add(mode, new());
+            }
+            else
+            {
+                var numberMatches = NumberRegex().Matches(line).Cast<Match>().ToArray();
+                mappingDefinitions[mode].Add(new(long.Parse(numberMatches[1].Value), long.Parse(numberMatches[0].Value), long.Parse(numberMatches[2].Value)));
+            }
         }
     }
-    else if (line.StartsWith("seed-")) mode = "se";
-    else if (line.StartsWith("so")) mode = "so";
-    else if (line.StartsWith("f")) mode = "f";
-    else if (line.StartsWith("w")) mode = "w";
+
+    foreach (var seed in mappings.Keys)
+    {
+        var seedMapping = mappings[seed];
+        foreach (var mappingDefinition in mappingDefinitions)
+        {
+            var source = seedMapping.Last();
+
+            var definitions = mappingDefinition.Value;
+            var found = false;
+            foreach (var definition in definitions)
+            {
+                if (source >= definition.Source && source <= definition.Source + definition.Range)
+                {
+                    var difference = source - definition.Source;
+                    seedMapping.Add(definition.Destination + difference);
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                seedMapping.Add(source);
+            }
+        }
+    }
+
+    return mappings.Values.Select(m => m.Last()).Min();
 }
 
-record MappingDefinition(int Source, int Destination, int Range);
+long PartTwo(string[] lines)
+{
+    var mappingDefinitions = new Dictionary<long, LinkedList<long>>();
+    var seedsToCheck = new List<long>();
+
+    var mappings = new Dictionary<long, List<long>>();
+    var mode = string.Empty;
+
+    var times = 0;
+    foreach (var line in lines)
+    {
+        if (line.StartsWith("seeds:"))
+        {
+            var seeds = SeedRegex().Matches(line);
+            foreach (Match seed in seeds)
+            {
+                var source = long.Parse(seed.Groups["source"].Value);
+                var range = long.Parse(seed.Groups["range"].Value);
+
+                for (var i = source; i <= source + range; i++)
+                {
+                    seedsToCheck.Add(i);
+                }
+                
+            }
+        }
+        else
+        {
+            var mappingMatch = MapRegex().Match(line);
+
+            if (string.IsNullOrEmpty(line)) continue;
+
+            if (mappingMatch.Success)
+            {
+                times += 1;
+            }
+            else
+            {
+                var numberMatches = NumberRegex().Matches(line).Cast<Match>().ToArray();
+                var source = long.Parse(numberMatches[1].Value);
+                var destination = long.Parse(numberMatches[0].Value);
+                var range = long.Parse(numberMatches[2].Value);
+
+                //var newList = new LinkedList<long>();
+                //newList.AddLast(source);
+                //newList.AddLast(destination);
+                //mappingDefinitions.Add(source, newList);
+
+                var count = 0;
+                for (var i = source; i < source + range; i++)
+                {
+                    var newList = new LinkedList<long>();
+                    newList.AddLast(i);
+                    newList.AddLast(destination + count);
+                    mappingDefinitions.Add(i, newList);
+
+                    count++;
+                }
+            }
+        }
+    }
+
+    //foreach (var seed in mappings.Keys)
+    //{
+    //    var seedMapping = mappings[seed];
+    //    foreach (var mappingDefinition in mappingDefinitions)
+    //    {
+    //        var source = seedMapping.Last();
+
+    //        var definitions = mappingDefinition.Value;
+    //        var found = false;
+    //        foreach (var definition in definitions)
+    //        {
+    //            if (source >= definition.Source && source <= definition.Source + definition.Range)
+    //            {
+    //                var difference = source - definition.Source;
+    //                seedMapping.Add(definition.Destination + difference);
+
+    //                found = true;
+    //                break;
+    //            }
+    //        }
+
+    //        if (!found)
+    //        {
+    //            seedMapping.Add(source);
+    //        }
+    //    }
+    //}
+
+    return mappings.Values.Select(m => m.Last()).Min();
+}
+
+record MappingDefinition(long Source, long Destination, long Range);
 
 partial class Program
 {
@@ -36,6 +183,12 @@ partial class Program
 
 partial class Program
 {
-    [GeneratedRegex("[a-z]+")]
-    private static partial Regex WordRegex();
+    [GeneratedRegex(".+-?map")]
+    private static partial Regex MapRegex();
+}
+
+partial class Program
+{
+    [GeneratedRegex("(?<source>\\d+) (?<range>\\d+)")]
+    private static partial Regex SeedRegex();
 }
